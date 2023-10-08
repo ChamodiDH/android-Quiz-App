@@ -74,10 +74,8 @@ public class MainActivity extends AppCompatActivity {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        // Create a service instance
-        QuizApiService apiService = retrofit.create(QuizApiService.class);
 
-        // Make the API request to fetch a question
+        QuizApiService apiService = retrofit.create(QuizApiService.class);
         Call<QuizResponse> call = apiService.getQuizQuestions();
         call.enqueue(new Callback<QuizResponse>() {
             @Override
@@ -85,7 +83,6 @@ public class MainActivity extends AppCompatActivity {
                 if (response.isSuccessful()) {
                     QuizResponse quizResponse = response.body();
                     if (quizResponse != null) {
-                        // Load the question image from the API response
                         String imageUrl = quizResponse.getQuestionImageUrl();
                         Picasso.get()
                                 .load(imageUrl)
@@ -95,15 +92,14 @@ public class MainActivity extends AppCompatActivity {
                                 .centerInside()
                                 .into(questionImage);
 
-                        // Get the solution for the current question
                         int solution = quizResponse.getSolution();
 
-                        // Set the answer options for the current question in the RadioGroup
+
                         List<String> answerOptions = Arrays.asList("1", "2", "3", "4", "5");
                         setupAnswerOptions(answerOptions);
                     }
                 } else {
-                    // Handle API error
+
                 }
             }
 
@@ -115,10 +111,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupAnswerOptions(List<String> answerOptions) {
-        // Clear any previous radio buttons in the RadioGroup
+
         answerGroup.removeAllViews();
 
-        // Add new RadioButtons based on answerOptions
         for (String optionText : answerOptions) {
             RadioButton radioButton = new RadioButton(this);
             radioButton.setText(optionText);
