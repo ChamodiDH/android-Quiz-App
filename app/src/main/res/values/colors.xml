@@ -2,4 +2,9 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="button_background_color">#d4d4d4</color>
+    <color name="primary_purple">#ac1ef7</color>
+    <color name="card_purple">#642893</color>
+    <color name="screen_purple">#561988</color>
+    <color name="green_color">#3db045</color>
 </resources>
