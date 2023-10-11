@@ -1,22 +1,20 @@
 package com.cdh.quizzgame;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
-
 import com.squareup.picasso.Picasso;
-
-import java.util.Arrays;
-import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -27,19 +25,34 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class MainActivity extends AppCompatActivity {
 
     private ImageView questionImage;
-    private RadioGroup answerGroup;
     private Button submitButton;
     private Button nextButton;
-
-    private Button button1, button2,button3,button4,button5,button6,button7,button8,button9,button0,selectedAnswerButton,correctAnswerButton;
-
-    private String baseUrl = "https://marcconrad.com/";
-    private int currentQuestionIndex = 0;
-
+    private Button button1;
+    private Button button2;
+    private Button button3;
+    private Button button4;
+    private Button button5;
+    private Button button6;
+    private Button button7;
+    private Button button8;
+    private Button button9;
+    private Button button0;
+    private Button selectedAnswerButton;
+    private int currentQuestionIndex = 1;
+    private int currentScore = 0;
     int solution;
-
     int selectedSolution;
     private int correctAnswerButtonId;
+    private TextView quizNo;
+    private TextView score;
+    private CountDownTimer questionTimer;
+    private AlertDialog restartDialog;
+
+    private TextView remainingTime;
+
+    private  final String baseUrl = "https://marcconrad.com/";
+
+    ProgressBar timeBar;
 
 
     @Override
@@ -47,13 +60,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-
-
         questionImage = findViewById(R.id.questionImage);
-        //answerGroup = findViewById(R.id.answerGroup);
         submitButton = findViewById(R.id.submitButton);
         nextButton = findViewById(R.id.nextButton);
+        quizNo = findViewById(R.id.quiz_no_text);
+        score = findViewById(R.id.score_text);
+        remainingTime = findViewById(R.id.remaining_time_text);
+        timeBar = findViewById(R.id.time_bar);
 
         button1 = findViewById(R.id.btn1);
         button2 = findViewById(R.id.btn2);
@@ -76,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
                 selectedAnswerButton = findViewById(R.id.btn0);
                 selectedAnswerButton.setBackgroundColor(getResources().getColor(R.color.primary_purple));
                 selectedSolution = 0;
-                Toast.makeText(getApplicationContext(),"The correct answer is"+solution,Toast.LENGTH_SHORT).show();
+               
 
 
             }
@@ -181,23 +194,23 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-
-
-
-
         submitButton.setOnClickListener(new View.OnClickListener() {
+
+
             @Override
             public void onClick(View v) {
+
                 boolean status = checkAnswers(solution,selectedSolution);
-                if(status == true){
+                if(status){
+                    if (questionTimer != null) {
+                        questionTimer.cancel();
+                    }
                     LayoutInflater inflater = getLayoutInflater();
                     View view = inflater.inflate(R.layout.custom_toastlayout,
-                            (ViewGroup)findViewById(R.id.toast_layout_root));
+                            findViewById(R.id.toast_layout_root));
 
                     Toast toast = new Toast(getApplicationContext());
                     toast.setView(view);
-                    //toast.setText("Correct Answer!");
                     toast.setDuration(Toast.LENGTH_LONG);
                     toast.show();
                     submitButton.setVisibility(View.GONE);
@@ -216,29 +229,41 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 currentQuestionIndex++;
+                quizNo.setText(String.valueOf(currentQuestionIndex));
                 disableButtons();
 
                 questionImage.setImageResource(R.drawable.placeholder_image);
                 nextButton.setVisibility(View.GONE);
                 submitButton.setVisibility(View.VISIBLE);
-                //correctAnswerButton.setBackgroundColor(getResources().getColor(R.color.button_background_color));
                 solution = -1;
                 selectedSolution = -1;
                 correctAnswerButtonId = -1;
+
 
                 loadQuestion(currentQuestionIndex);
 
             }
         });
 
-       //load question was here
+
         loadQuestion(currentQuestionIndex);
 
 
     }
 
     private void loadQuestion(int index) {
-        // Create a Retrofit instance
+
+        if (questionTimer != null) {
+            questionTimer.cancel();
+        }
+
+
+        remainingTime.setText(R.string.remaining_time_30_seconds);
+        timeBar.setProgress(100);
+
+        quizNo.setText(String.valueOf(index));
+        score.setText(String.valueOf(currentScore));
+
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -249,7 +274,7 @@ public class MainActivity extends AppCompatActivity {
         Call<QuizResponse> call = apiService.getQuizQuestions();
         call.enqueue(new Callback<QuizResponse>() {
             @Override
-            public void onResponse(Call<QuizResponse> call, Response<QuizResponse> response) {
+            public void onResponse(@NonNull Call<QuizResponse> call, @NonNull Response<QuizResponse> response) {
                 if (response.isSuccessful()) {
                     QuizResponse quizResponse = response.body();
                     if (quizResponse != null) {
@@ -298,8 +323,7 @@ public class MainActivity extends AppCompatActivity {
                                 break;
                         }
 
-
-
+                        startTimer(30, timeBar);
                     }
                 } else {
 
@@ -307,7 +331,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<QuizResponse> call, Throwable t) {
+            public void onFailure(@NonNull Call<QuizResponse> call, @NonNull Throwable t) {
                 Picasso.get()
                         .load(R.drawable.error_image)
                         .placeholder(R.drawable.placeholder_image)
@@ -315,7 +339,6 @@ public class MainActivity extends AppCompatActivity {
                         .fit()
                         .centerInside()
                         .into(questionImage);
-
 
                 Toast.makeText(getApplicationContext(), "Error fetching data. Please check your network connection.", Toast.LENGTH_SHORT).show();
             }
@@ -375,12 +398,51 @@ public class MainActivity extends AppCompatActivity {
         submitButton.setBackgroundColor(getResources().getColor(R.color.primary_purple));
     }
 
+    private void startTimer(int seconds, ProgressBar progressBar) {
+        questionTimer = new CountDownTimer(seconds * 1000L, 1000) {
+            public void onTick(long millisUntilFinished) {
+                int remainingSeconds = (int) millisUntilFinished / 1000;
+                String timerText = "Remaining time: " + remainingSeconds + " seconds";
+                remainingTime.setText(timerText);
+
+                int totalDuration = seconds * 1000;
+                int elapsedTime = totalDuration - (int) millisUntilFinished;
+                int progress = (int) (100 - ((float) elapsedTime / totalDuration * 100));
+                progressBar.setProgress(progress);
+            }
+
+            public void onFinish() {
+                showRestartDialog();
+            }
+        }.start();
+    }
+
+    private void showRestartDialog() {
+        if (restartDialog != null && restartDialog.isShowing()) {
+            return;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Time's Up! The correct answer is "+solution);
+        builder.setMessage("Do you want to restart the quiz?");
+        builder.setPositiveButton("Yes", (dialog, which) -> {
+
+            currentQuestionIndex = 1;
+            currentScore = 0;
+            loadQuestion(currentQuestionIndex);
+        });
+        builder.setCancelable(false);
+        restartDialog = builder.create();
+        restartDialog.show();
+    }
+
+
     private boolean checkAnswers(int correctAnswer, int selectedAnswer){
-//        int selectedRadioButtonId = answerGroup.getCheckedRadioButtonId();
-//        RadioButton selectedRadioButton = findViewById(selectedRadioButtonId);
 
             if (selectedAnswer == correctAnswer){
-                correctAnswerButton = findViewById(correctAnswerButtonId);
+                currentScore += 10;
+                score.setText(String.valueOf(currentScore));
+                Button correctAnswerButton = findViewById(correctAnswerButtonId);
                 correctAnswerButton.setBackgroundColor(getResources().getColor(R.color.green_color));
                 return true;
             }else{

@@ -1,3 +1,23 @@
 <resources>
     <string name="app_name">QuizzGame</string>
+    <string name="remaining_time_30_seconds">Remaining time: 30 seconds</string>
+    <string name="welcome">Welcome</string>
+    <string name="user">user</string>
+    <string name="quiz_no">Quiz no:</string>
+    <string name="no">no</string>
+    <string name="score">Score:</string>
+    <string name="_0">0</string>
+    <string name="remaining_time_30_seconds_text">Remaining time 30 seconds</string>
+    <string name="_1">1</string>
+    <string name="_2">2</string>
+    <string name="_3">3</string>
+    <string name="_4">4</string>
+    <string name="_5">5</string>
+    <string name="_6">6</string>
+    <string name="_7">7</string>
+    <string name="_8">8</string>
+    <string name="_9">9</string>
+    <string name="_0_2">0</string>
+    <string name="submit">Submit</string>
+    <string name="next">Next</string>
 </resources>
