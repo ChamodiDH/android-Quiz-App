@@ -10,11 +10,45 @@
     android:background="@color/screen_purple"
     >
 
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Hi!!!"
+        android:background="#00FFFF">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/score"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Score:"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/score2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Score2"
+                android:layout_weight="1"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+
+    </androidx.appcompat.widget.Toolbar>
+
     <ImageView
         android:id="@+id/questionImage"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:scaleType="fitCenter"
+        android:layout_below="@id/toolbar"
         />
 <!--    <RadioGroup-->
 <!--        android:id="@+id/answerGroup"-->
@@ -186,9 +220,15 @@
 
             <Button
                 android:id="@+id/nextButton"
-                android:layout_width="200dp"
-                android:layout_height="200dp"
+                android:layout_width="160dp"
+                android:layout_height="80dp"
+                android:layout_marginLeft="15dp"
+                android:layout_marginBottom="15dp"
+                android:background="@color/primary_purple"
                 android:text="Next"
+                android:textAllCaps="false"
+                android:textColor="#FFFEFE"
+                android:textSize="34sp"
                 android:visibility="gone" />
 
 
