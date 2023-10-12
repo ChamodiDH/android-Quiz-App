@@ -85,12 +85,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                selectedAnswerButton.setBackgroundColor(getResources().getColor(R.color.button_background_color));
+                if(selectedAnswerButton != null){
+                    selectedAnswerButton.setBackgroundColor(getResources().getColor(R.color.button_background_color));
+                }
+                selectedSolution = 0;
                 selectedAnswerButton = findViewById(R.id.btn0);
                 selectedAnswerButton.setBackgroundColor(getResources().getColor(R.color.primary_purple));
-                selectedSolution = 0;
-               
-
 
             }
         });
