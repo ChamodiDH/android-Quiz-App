@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.LayoutInflater;
@@ -14,6 +15,14 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.squareup.picasso.Picasso;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -24,8 +33,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
 
+    FirebaseAuth auth;
+    FirebaseUser user;
     private ImageView questionImage;
-    private Button submitButton;
+    private Button submitButton,logoutButton;
     private Button nextButton;
     private Button button1;
     private Button button2;
@@ -40,18 +51,16 @@ public class MainActivity extends AppCompatActivity {
     private Button selectedAnswerButton;
     private int currentQuestionIndex = 1;
     private int currentScore = 0;
+    private int correctAnswerCount;
+    private int incorrectAnswerCount;
     int solution;
     int selectedSolution;
     private int correctAnswerButtonId;
-    private TextView quizNo;
-    private TextView score;
+    private TextView quizNo,score,userName;
     private CountDownTimer questionTimer;
     private AlertDialog restartDialog;
-
     private TextView remainingTime;
-
     private  final String baseUrl = "https://marcconrad.com/";
-
     ProgressBar timeBar;
 
 
@@ -60,13 +69,41 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        auth = FirebaseAuth.getInstance();
         questionImage = findViewById(R.id.questionImage);
         submitButton = findViewById(R.id.submitButton);
         nextButton = findViewById(R.id.nextButton);
+        logoutButton = findViewById(R.id.logout_button);
         quizNo = findViewById(R.id.quiz_no_text);
         score = findViewById(R.id.score_text);
+        userName = findViewById(R.id.welcome_user_text);
         remainingTime = findViewById(R.id.remaining_time_text);
         timeBar = findViewById(R.id.time_bar);
+        user = auth.getCurrentUser();
+
+        if(user == null){
+            Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+            startActivity(intent);
+            finish();
+        }else{
+
+            String uid = user.getUid();
+            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("users/" + uid);
+            databaseReference.child("username").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DataSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        String name = task.getResult().getValue(String.class);
+                        userName.setText(name.toString());
+
+
+                    } else {
+                        // Handle the error
+                    }
+                }
+            });
+
+        }
 
         button1 = findViewById(R.id.btn1);
         button2 = findViewById(R.id.btn2);
@@ -80,6 +117,18 @@ public class MainActivity extends AppCompatActivity {
         button0 = findViewById(R.id.btn0);
 
         disableButtons();
+
+
+
+        logoutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FirebaseAuth.getInstance().signOut();
+                Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
 
         button0.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -200,11 +249,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
+                if (questionTimer != null) {
+                    questionTimer.cancel();
+                   }
                 boolean status = checkAnswers(solution,selectedSolution);
                 if(status){
-                    if (questionTimer != null) {
-                        questionTimer.cancel();
-                    }
+//                    if (questionTimer != null) {
+//                        questionTimer.cancel();
+//                    }
                     LayoutInflater inflater = getLayoutInflater();
                     View view = inflater.inflate(R.layout.custom_toastlayout,
                             findViewById(R.id.toast_layout_root));
@@ -218,6 +270,9 @@ public class MainActivity extends AppCompatActivity {
                 }else{
                     selectedAnswerButton.setBackgroundColor(getResources().getColor(R.color.button_background_color));
                     Toast.makeText(getApplicationContext(),"Incorrect answer!",Toast.LENGTH_SHORT).show();
+                    //new lines
+                    submitButton.setVisibility(View.GONE);
+                    nextButton.setVisibility(View.VISIBLE);
                 }
 
 
@@ -418,22 +473,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showRestartDialog() {
-        if (restartDialog != null && restartDialog.isShowing()) {
-            return;
+        if (!isFinishing()) {
+            if (restartDialog != null && restartDialog.isShowing()) {
+                return;
+            }
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Time's Up! The correct answer is " + solution);
+            builder.setMessage("Do you want to restart the quiz?");
+            builder.setPositiveButton("Yes", (dialog, which) -> {
+
+                currentQuestionIndex = 1;
+                currentScore = 0;
+                loadQuestion(currentQuestionIndex);
+            });
+            builder.setCancelable(false);
+            restartDialog = builder.create();
+            restartDialog.show();
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Time's Up! The correct answer is "+solution);
-        builder.setMessage("Do you want to restart the quiz?");
-        builder.setPositiveButton("Yes", (dialog, which) -> {
-
-            currentQuestionIndex = 1;
-            currentScore = 0;
-            loadQuestion(currentQuestionIndex);
-        });
-        builder.setCancelable(false);
-        restartDialog = builder.create();
-        restartDialog.show();
     }
 
 

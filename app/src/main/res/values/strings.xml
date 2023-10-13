@@ -20,4 +20,12 @@
     <string name="_0_2">0</string>
     <string name="submit">Submit</string>
     <string name="next">Next</string>
+    <string name="login">Login</string>
+    <string name="email">email</string>
+    <string name="password">password</string>
+    <string name="click_to_register_now">Click to register now</string>
+    <string name="register">Register</string>
+    <string name="click_to_login_now">Click to login now</string>
+    <string name="name">name</string>
+    <string name="space">\u0020</string>
 </resources>
