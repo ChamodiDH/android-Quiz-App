@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private int currentScore = 0;
     private int correctAnswerCount;
     private int incorrectAnswerCount;
+    private int totalAnsweredQuestionCount;
     int solution;
     int selectedSolution;
     private int correctAnswerButtonId;
@@ -62,6 +63,11 @@ public class MainActivity extends AppCompatActivity {
     private TextView remainingTime;
     private  final String baseUrl = "https://marcconrad.com/";
     ProgressBar timeBar;
+    DatabaseReference databaseRef;
+    ReportEntry reportEntry;
+    String uid;
+
+
 
 
     @Override
@@ -80,12 +86,15 @@ public class MainActivity extends AppCompatActivity {
         remainingTime = findViewById(R.id.remaining_time_text);
         timeBar = findViewById(R.id.time_bar);
         user = auth.getCurrentUser();
+        correctAnswerCount = 0;
+        incorrectAnswerCount = 0;
+
 
         if(user == null){
             Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
             startActivity(intent);
             finish();
-        }else{
+        }
 
             String uid = user.getUid();
             DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("users/" + uid);
@@ -103,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-        }
+
 
         button1 = findViewById(R.id.btn1);
         button2 = findViewById(R.id.btn2);
@@ -118,8 +127,6 @@ public class MainActivity extends AppCompatActivity {
 
         disableButtons();
 
-
-
         logoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -129,6 +136,22 @@ public class MainActivity extends AppCompatActivity {
                 finish();
             }
         });
+
+        userName.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                totalAnsweredQuestionCount = currentQuestionIndex-1;
+
+                databaseRef = FirebaseDatabase.getInstance().getReference("users/" + uid + "/attempt");
+                reportEntry = new ReportEntry(String.valueOf(totalAnsweredQuestionCount) ,String.valueOf(correctAnswerCount),String.valueOf(incorrectAnswerCount));
+                databaseRef.push().setValue(reportEntry);
+
+                Intent intent = new Intent(getApplicationContext(), ReportActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+
 
         button0.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -248,7 +271,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
-
+                disableButtons();
                 if (questionTimer != null) {
                     questionTimer.cancel();
                    }
@@ -257,6 +280,7 @@ public class MainActivity extends AppCompatActivity {
 //                    if (questionTimer != null) {
 //                        questionTimer.cancel();
 //                    }
+                    correctAnswerCount++;
                     LayoutInflater inflater = getLayoutInflater();
                     View view = inflater.inflate(R.layout.custom_toastlayout,
                             findViewById(R.id.toast_layout_root));
@@ -268,6 +292,7 @@ public class MainActivity extends AppCompatActivity {
                     submitButton.setVisibility(View.GONE);
                     nextButton.setVisibility(View.VISIBLE);
                 }else{
+                    incorrectAnswerCount++;
                     selectedAnswerButton.setBackgroundColor(getResources().getColor(R.color.button_background_color));
                     Toast.makeText(getApplicationContext(),"Incorrect answer!",Toast.LENGTH_SHORT).show();
                     //new lines
@@ -485,6 +510,8 @@ public class MainActivity extends AppCompatActivity {
 
                 currentQuestionIndex = 1;
                 currentScore = 0;
+                correctAnswerCount = 0;
+                incorrectAnswerCount = 0;
                 loadQuestion(currentQuestionIndex);
             });
             builder.setCancelable(false);
