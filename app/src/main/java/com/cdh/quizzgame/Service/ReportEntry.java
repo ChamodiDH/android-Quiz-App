@@ -1,6 +1,4 @@
-package com.cdh.quizzgame;
-
-import com.google.firebase.auth.FirebaseAuth;
+package com.cdh.quizzgame.Service;
 
 public class ReportEntry {
 
@@ -8,6 +6,9 @@ public class ReportEntry {
     private String correctQuestions;
     private String incorrectQuestions;
 
+    public ReportEntry() {
+
+    }
 
 
     public ReportEntry(String totalQuestionsAnswered, String correctQuestions, String incorrectQuestions) {

@@ -1,4 +1,6 @@
-package com.cdh.quizzgame;
+package com.cdh.quizzgame.Interface;
+
+import com.cdh.quizzgame.Service.QuizResponse;
 
 import retrofit2.Call;
 import retrofit2.http.GET;

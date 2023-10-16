@@ -28,4 +28,5 @@
     <string name="click_to_login_now">Click to login now</string>
     <string name="name">name</string>
     <string name="space">\u0020</string>
+    <string name="back">Back</string>
 </resources>

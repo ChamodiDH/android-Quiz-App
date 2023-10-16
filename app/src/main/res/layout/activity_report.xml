@@ -4,23 +4,44 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ReportActivity"
+    tools:context=".Activity.ReportActivity"
     android:orientation="vertical"
-    android:layout_margin="25dp">
+    android:padding="10dp"
+    android:background="@color/light_background_color"
+    >
 
     <TextView
+        android:id="@+id/profileName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:id="@+id/profileName"
+        android:textAlignment="center"
+        android:textSize="30dp"
         android:textStyle="bold"
-        android:textSize="20dp"/>
+        android:layout_gravity="center"
+        android:background="@color/primary_purple"
+        android:textColor="@color/white"
+        android:padding="8dp"/>
+
     <TextView
+        android:id="@+id/details"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/details"
-        android:textSize="15dp"
         android:layout_marginTop="6dp"
+        android:textSize="20dp"
+        android:layout_gravity="center"
+        android:background="@color/screen_purple"
+        android:textColor="@color/white"
+        android:padding="10dp"/>
+
+    <Button
+        android:id="@+id/report_back_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:text="@string/back"
         />
 
 </LinearLayout>

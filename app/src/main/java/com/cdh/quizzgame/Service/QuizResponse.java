@@ -1,4 +1,4 @@
-package com.cdh.quizzgame;
+package com.cdh.quizzgame.Service;
 import com.google.gson.annotations.SerializedName;
 
 public class QuizResponse {

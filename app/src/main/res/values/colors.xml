@@ -8,4 +8,6 @@
     <color name="screen_purple">#561988</color>
     <color name="green_color">#3db045</color>
     <color name ="brown_color">#CCC8AA</color>
+    <color name ="light_background_color">#E0B0FF</color>
 </resources>
+
