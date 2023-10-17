@@ -4,10 +4,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.admin.DevicePolicyManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -28,6 +30,9 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.squareup.picasso.Picasso;
+
+import java.sql.SQLOutput;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -37,8 +42,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
 
-    FirebaseAuth auth;
-    FirebaseUser user;
+    private FirebaseAuth auth;
+    private FirebaseUser user;
     private ImageView questionImage;
     private Button submitButton,logoutButton;
     private Button nextButton;
@@ -72,27 +77,14 @@ public class MainActivity extends AppCompatActivity {
     String uid;
 
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         try {
+            Log.e("main_activity","Oncreate");
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_main);
+            initUI();
 
-            auth = FirebaseAuth.getInstance();
-            questionImage = findViewById(R.id.questionImage);
-            submitButton = findViewById(R.id.submitButton);
-            nextButton = findViewById(R.id.nextButton);
-            logoutButton = findViewById(R.id.logout_button);
-            quizNo = findViewById(R.id.quiz_no_text);
-            score = findViewById(R.id.score_text);
-            userName = findViewById(R.id.welcome_user_text);
-            remainingTime = findViewById(R.id.remaining_time_text);
-            timeBar = findViewById(R.id.time_bar);
-            user = auth.getCurrentUser();
-            correctAnswerCount = 0;
-            incorrectAnswerCount = 0;
 
 
             if (user == null) {
@@ -356,6 +348,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void initUI(){
+        auth = FirebaseAuth.getInstance();
+        questionImage = findViewById(R.id.questionImage);
+        submitButton = findViewById(R.id.submitButton);
+        nextButton = findViewById(R.id.nextButton);
+        logoutButton = findViewById(R.id.logout_button);
+        quizNo = findViewById(R.id.quiz_no_text);
+        score = findViewById(R.id.score_text);
+        userName = findViewById(R.id.welcome_user_text);
+        remainingTime = findViewById(R.id.remaining_time_text);
+        timeBar = findViewById(R.id.time_bar);
+        user = auth.getCurrentUser();
+        correctAnswerCount = 0;
+        incorrectAnswerCount = 0;
+    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -375,6 +382,10 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+
+
+
 
 
     private void loadQuestion(int index) {
@@ -548,7 +559,25 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.e("main_activity","Onpause");
+        if (questionTimer != null) {
+            questionTimer.cancel();
+        }
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.e("main_activity","Onresume");
+
+        if (questionTimer != null) {
+            questionTimer.cancel();
+            startTimer(30, timeBar);
+        }
+    }
 }
-
-
-
