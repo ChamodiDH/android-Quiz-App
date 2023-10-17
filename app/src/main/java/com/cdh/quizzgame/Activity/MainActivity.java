@@ -66,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
     int solution;
     int selectedSolution = -1;
     private int correctAnswerButtonId;
+    private int remainingSeconds;
     private TextView quizNo,score,userName;
     private CountDownTimer questionTimer;
     private AlertDialog restartDialog;
@@ -505,7 +506,7 @@ public class MainActivity extends AppCompatActivity {
     private void startTimer(int seconds, ProgressBar progressBar) {
         questionTimer = new CountDownTimer(seconds * 1000L, 1000) {
             public void onTick(long millisUntilFinished) {
-                int remainingSeconds = (int) millisUntilFinished / 1000;
+                remainingSeconds = (int) millisUntilFinished / 1000;
                 String timerText = "Remaining time: " + remainingSeconds + " seconds";
                 remainingTime.setText(timerText);
 
@@ -577,7 +578,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (questionTimer != null) {
             questionTimer.cancel();
-            startTimer(30, timeBar);
+            startTimer(remainingSeconds, timeBar);
         }
     }
 }
