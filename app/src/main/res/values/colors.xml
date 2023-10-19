@@ -9,5 +9,11 @@
     <color name="green_color">#3db045</color>
     <color name ="brown_color">#CCC8AA</color>
     <color name ="light_background_color">#E0B0FF</color>
+    <color name ="logout_background_color"> #ce9cf5</color>
+    <color name="light_font">#FBFBFB</color>
+    <color name="grey_font">#ff9e9e9e</color>
+    <color name="text_shadow">#7F000000</color>
+    <color name="text_shadow_white">#FFFFFF</color>
+
 </resources>
 

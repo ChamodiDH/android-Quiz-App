@@ -4,15 +4,19 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.app.admin.DevicePolicyManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -33,11 +37,13 @@ import com.squareup.picasso.Picasso;
 
 import java.sql.SQLOutput;
 
+import jp.wasabeef.picasso.transformations.RoundedCornersTransformation;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import jp.wasabeef.picasso.transformations.RoundedCornersTransformation;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -45,7 +51,8 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth auth;
     private FirebaseUser user;
     private ImageView questionImage;
-    private Button submitButton,logoutButton;
+    private Button submitButton;
+    private ImageButton logoutButton;
     private Button nextButton;
     private Button button1;
     private Button button2;
@@ -66,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
     int solution;
     int selectedSolution = -1;
     private int correctAnswerButtonId;
-    private int remainingSeconds;
+    private int remainingTimeSeconds = 30;
     private TextView quizNo,score,userName;
     private CountDownTimer questionTimer;
     private AlertDialog restartDialog;
@@ -77,7 +84,14 @@ public class MainActivity extends AppCompatActivity {
     ReportEntry reportEntry;
     String uid;
 
+    boolean tstate = false;
 
+    int currentProgress = 100;
+
+    int remainingSeconds;
+
+
+    @SuppressLint("UseCompatLoadingForDrawables")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         try {
@@ -85,6 +99,8 @@ public class MainActivity extends AppCompatActivity {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_main);
             initUI();
+
+           // button1.setBackground(this.getResources().getDrawable(R.drawable.button_custom_background));
 
 
 
@@ -111,7 +127,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-
             button1 = findViewById(R.id.btn1);
             button2 = findViewById(R.id.btn2);
             button3 = findViewById(R.id.btn3);
@@ -123,7 +138,12 @@ public class MainActivity extends AppCompatActivity {
             button9 = findViewById(R.id.btn9);
             button0 = findViewById(R.id.btn0);
 
+
+
+
+
             disableButtons();
+
 
             logoutButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -151,9 +171,6 @@ public class MainActivity extends AppCompatActivity {
                     reportEntry = new ReportEntry(String.valueOf(totalAnsweredQuestionCount), String.valueOf(correctAnswerCount), String.valueOf(incorrectAnswerCount));
                     databaseRef.push().setValue(reportEntry);
 
-//                Intent intent = new Intent(getApplicationContext(), ReportActivity.class);
-//                startActivity(intent);
-//                finish();
 
                     if (questionTimer != null) {
                         questionTimer.cancel();
@@ -307,7 +324,7 @@ public class MainActivity extends AppCompatActivity {
                         nextButton.setVisibility(View.VISIBLE);
                     } else {
                         incorrectAnswerCount++;
-                        selectedAnswerButton.setBackgroundColor(getResources().getColor(R.color.button_background_color));
+                        selectedAnswerButton.setBackground(getResources().getDrawable(R.drawable.button_custom_background));
                         Toast.makeText(getApplicationContext(), "Incorrect answer!", Toast.LENGTH_SHORT).show();
                         submitButton.setVisibility(View.GONE);
                         nextButton.setVisibility(View.VISIBLE);
@@ -349,7 +366,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressLint("UseCompatLoadingForDrawables")
     private void initUI(){
+
         auth = FirebaseAuth.getInstance();
         questionImage = findViewById(R.id.questionImage);
         submitButton = findViewById(R.id.submitButton);
@@ -363,6 +382,13 @@ public class MainActivity extends AppCompatActivity {
         user = auth.getCurrentUser();
         correctAnswerCount = 0;
         incorrectAnswerCount = 0;
+
+
+//        LayerDrawable layerDrawable = (LayerDrawable)  timeBar.getProgressDrawable();
+//        GradientDrawable gradientDrawable = (GradientDrawable) layerDrawable.findDrawableByLayerId(android.R.id.progress);
+//        gradientDrawable.setCornerRadius(10);
+//
+
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -370,7 +396,8 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == 1) {
             if (resultCode == RESULT_OK) {
-                startTimer(30, timeBar);
+               // startTimer(30, timeBar);
+                startTimer(remainingTimeSeconds, timeBar);
                 SharedPreferences sharedPreferences = getSharedPreferences("QuizState", MODE_PRIVATE);
                 int savedQuestionIndex = sharedPreferences.getInt("currentQuestionIndex", 1);
 
@@ -396,11 +423,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-        remainingTime.setText(R.string.remaining_time_30_seconds);
-        timeBar.setProgress(100);
 
-        quizNo.setText(String.valueOf(index));
-        score.setText(String.valueOf(currentScore));
+
+       // timeBar.setProgress(100);
+
+        quizNo.setText(" "+String.valueOf(index));
+        score.setText(" "+String.valueOf(currentScore));
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
@@ -421,11 +449,13 @@ public class MainActivity extends AppCompatActivity {
                                 .load(imageUrl)
                                 .placeholder(R.drawable.placeholder_image)
                                 .error(R.drawable.error_image)
+                                .transform(new RoundedCornersTransformation(25, 0))
                                 .fit()
-                                .centerInside()
+//                                .centerInside()
                                 .into(questionImage);
 
                         solution = quizResponse.getSolution();
+
                         enableButtons();
 
                         switch (solution) {
@@ -461,7 +491,10 @@ public class MainActivity extends AppCompatActivity {
                                 break;
                         }
 
-                        startTimer(30, timeBar);
+                        remainingTimeSeconds = 30;
+
+                        startTimer( remainingTimeSeconds,timeBar);
+                        remainingTime.setText(R.string.remaining_time_30_seconds);
                     }
                 } else {
                     Toast.makeText(getApplicationContext(), "Error loading data....", Toast.LENGTH_SHORT).show();
@@ -498,21 +531,37 @@ public class MainActivity extends AppCompatActivity {
 
         for (Button button : buttons) {
             button.setEnabled(true);
-            button.setBackgroundColor(buttonBackgroundColor);
+            button.setBackground(this.getResources().getDrawable(R.drawable.button_custom_background));
         }
 
-        submitButton.setBackgroundColor(getResources().getColor(R.color.primary_purple));
+        submitButton.setBackground(this.getResources().getDrawable(R.drawable.submit_next_button_baclground));
     }
     private void startTimer(int seconds, ProgressBar progressBar) {
         questionTimer = new CountDownTimer(seconds * 1000L, 1000) {
             public void onTick(long millisUntilFinished) {
+
                 remainingSeconds = (int) millisUntilFinished / 1000;
                 String timerText = "Remaining time: " + remainingSeconds + " seconds";
                 remainingTime.setText(timerText);
 
+
                 int totalDuration = seconds * 1000;
-                int elapsedTime = totalDuration - (int) millisUntilFinished;
-                int progress = (int) (100 - ((float) elapsedTime / totalDuration * 100));
+
+
+               int elapsedTime = totalDuration - (int) millisUntilFinished;
+                int progress;
+
+                    progress = (int) ( (currentProgress - ((float) elapsedTime / totalDuration * currentProgress)));
+                    //tstate = false;
+
+                   // progress = (int) (100 - ((float) elapsedTime / totalDuration * 100));
+
+
+
+
+                Log.e("progress value","progress:"+progress);
+                System.out.println("progress value is:"+progress);
+
                 progressBar.setProgress(progress);
             }
 
@@ -538,6 +587,8 @@ public class MainActivity extends AppCompatActivity {
                 correctAnswerCount = 0;
                 incorrectAnswerCount = 0;
                 totalAnsweredQuestionCount = 0;
+                remainingTimeSeconds = 30;
+                currentProgress = 100;
                 loadQuestion(currentQuestionIndex);
             });
             builder.setCancelable(false);
@@ -567,6 +618,8 @@ public class MainActivity extends AppCompatActivity {
         Log.e("main_activity","Onpause");
         if (questionTimer != null) {
             questionTimer.cancel();
+            remainingTimeSeconds = remainingSeconds;
+
         }
 
     }
@@ -575,10 +628,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         Log.e("main_activity","Onresume");
+        Log.e("remaining seconds","remainingseconds"+remainingTimeSeconds);
+
 
         if (questionTimer != null) {
             questionTimer.cancel();
-            startTimer(remainingSeconds, timeBar);
+            tstate = true;
+            currentProgress = timeBar.getProgress();
+            startTimer(remainingTimeSeconds, timeBar);
+
+
         }
     }
 }
