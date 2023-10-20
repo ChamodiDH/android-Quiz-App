@@ -1,4 +1,4 @@
-package com.cdh.quizzgame.Activity;
+package com.cdh.quizzgame.View;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,7 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.cdh.quizzgame.Service.ReportEntry;
+import com.cdh.quizzgame.Model.ReportEntry;
 import com.cdh.quizzgame.R;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;

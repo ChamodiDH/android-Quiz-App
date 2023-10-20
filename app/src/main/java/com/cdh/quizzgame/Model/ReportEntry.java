@@ -1,4 +1,4 @@
-package com.cdh.quizzgame.Service;
+package com.cdh.quizzgame.Model;
 
 public class ReportEntry {
 

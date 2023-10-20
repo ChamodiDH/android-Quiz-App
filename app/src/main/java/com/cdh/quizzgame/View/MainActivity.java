@@ -1,15 +1,11 @@
-package com.cdh.quizzgame.Activity;
+package com.cdh.quizzgame.View;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
-import android.app.admin.DevicePolicyManager;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.graphics.drawable.GradientDrawable;
-import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
@@ -22,28 +18,24 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.cdh.quizzgame.Controller.QuizApiController;
+import com.cdh.quizzgame.Data.DatabaseHandler;
 import com.cdh.quizzgame.Service.QuizResponse;
-import com.cdh.quizzgame.Service.ReportEntry;
-import com.cdh.quizzgame.Interface.QuizApiService;
+import com.cdh.quizzgame.Model.ReportEntry;
 import com.cdh.quizzgame.R;
+import com.cdh.quizzgame.Utils.PreferencesUtils;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.squareup.picasso.Picasso;
-
-import java.sql.SQLOutput;
 
 import jp.wasabeef.picasso.transformations.RoundedCornersTransformation;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
-import jp.wasabeef.picasso.transformations.RoundedCornersTransformation;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -51,45 +43,29 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth auth;
     private FirebaseUser user;
     private ImageView questionImage;
-    private Button submitButton;
+    private Button submitButton,nextButton,button1,button2,button3,button4,button5,button6,button7,button8,button9,button0,selectedAnswerButton;
     private ImageButton logoutButton;
-    private Button nextButton;
-    private Button button1;
-    private Button button2;
-    private Button button3;
-    private Button button4;
-    private Button button5;
-    private Button button6;
-    private Button button7;
-    private Button button8;
-    private Button button9;
-    private Button button0;
-    private Button selectedAnswerButton;
     private int currentQuestionIndex = 1;
     private int currentScore = 0;
     private int correctAnswerCount;
     private int incorrectAnswerCount;
     private int totalAnsweredQuestionCount = 0;
-    int solution;
-    int selectedSolution = -1;
+    private int solution;
+    private int selectedSolution = -1;
     private int correctAnswerButtonId;
     private int remainingTimeSeconds = 30;
     private TextView quizNo,score,userName;
     private CountDownTimer questionTimer;
     private AlertDialog restartDialog;
     private TextView remainingTime;
-    private  final String baseUrl = "https://marcconrad.com/";
-    ProgressBar timeBar;
-    DatabaseReference databaseRef;
-    ReportEntry reportEntry;
-    String uid;
-
-    boolean tstate = false;
-
-    int currentProgress = 100;
-
-    int remainingSeconds;
-
+    private QuizApiController quizApiController;
+    private ProgressBar timeBar;
+    private DatabaseReference databaseRef;
+    private ReportEntry reportEntry;
+    private boolean tstate = false;
+    private int currentProgress = 100;
+    private int remainingSeconds;
+    private DatabaseHandler databaseHandler;
 
     @SuppressLint("UseCompatLoadingForDrawables")
     @Override
@@ -99,20 +75,17 @@ public class MainActivity extends AppCompatActivity {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_main);
             initUI();
+            databaseHandler = new DatabaseHandler();
 
-           // button1.setBackground(this.getResources().getDrawable(R.drawable.button_custom_background));
+            quizApiController = new QuizApiController();
 
-
-
-            if (user == null) {
+            if(!databaseHandler.checkUser()){
                 Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
                 startActivity(intent);
                 finish();
             }
 
-            String uid = user.getUid();
-            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("users/" + uid);
-            databaseReference.child("username").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            databaseHandler.loadUserName(new OnCompleteListener<DataSnapshot>() {
                 @Override
                 public void onComplete(@NonNull Task<DataSnapshot> task) {
                     if (task.isSuccessful()) {
@@ -127,23 +100,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-            button1 = findViewById(R.id.btn1);
-            button2 = findViewById(R.id.btn2);
-            button3 = findViewById(R.id.btn3);
-            button4 = findViewById(R.id.btn4);
-            button5 = findViewById(R.id.btn5);
-            button6 = findViewById(R.id.btn6);
-            button7 = findViewById(R.id.btn7);
-            button8 = findViewById(R.id.btn8);
-            button9 = findViewById(R.id.btn9);
-            button0 = findViewById(R.id.btn0);
-
-
-
-
-
             disableButtons();
-
 
             logoutButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -159,17 +116,17 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
 
-                    SharedPreferences sharedPreferences = getSharedPreferences("QuizState", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putInt("currentQuestionIndex", currentQuestionIndex);
-                    editor.putInt("currentScore", currentScore);
-                    editor.putInt("correctAnswerCount", correctAnswerCount);
-                    editor.putInt("incorrectAnswerCount", incorrectAnswerCount);
-                    editor.apply();
+                    PreferencesUtils.saveQuizState(
+                            getApplicationContext(),
+                            currentQuestionIndex,
+                            currentScore,
+                            correctAnswerCount,
+                            incorrectAnswerCount
+                    );
 
-                    databaseRef = FirebaseDatabase.getInstance().getReference("users/" + uid + "/attempt");
+
                     reportEntry = new ReportEntry(String.valueOf(totalAnsweredQuestionCount), String.valueOf(correctAnswerCount), String.valueOf(incorrectAnswerCount));
-                    databaseRef.push().setValue(reportEntry);
+                    databaseHandler.saveReportEntry(reportEntry);
 
 
                     if (questionTimer != null) {
@@ -330,7 +287,6 @@ public class MainActivity extends AppCompatActivity {
                         nextButton.setVisibility(View.VISIBLE);
                     }
 
-
                 }
             });
 
@@ -348,7 +304,6 @@ public class MainActivity extends AppCompatActivity {
                     solution = -1;
                     selectedSolution = -1;
                     correctAnswerButtonId = -1;
-
 
                     loadQuestion(currentQuestionIndex);
 
@@ -382,12 +337,16 @@ public class MainActivity extends AppCompatActivity {
         user = auth.getCurrentUser();
         correctAnswerCount = 0;
         incorrectAnswerCount = 0;
-
-
-//        LayerDrawable layerDrawable = (LayerDrawable)  timeBar.getProgressDrawable();
-//        GradientDrawable gradientDrawable = (GradientDrawable) layerDrawable.findDrawableByLayerId(android.R.id.progress);
-//        gradientDrawable.setCornerRadius(10);
-//
+        button1 = findViewById(R.id.btn1);
+        button2 = findViewById(R.id.btn2);
+        button3 = findViewById(R.id.btn3);
+        button4 = findViewById(R.id.btn4);
+        button5 = findViewById(R.id.btn5);
+        button6 = findViewById(R.id.btn6);
+        button7 = findViewById(R.id.btn7);
+        button8 = findViewById(R.id.btn8);
+        button9 = findViewById(R.id.btn9);
+        button0 = findViewById(R.id.btn0);
 
     }
     @Override
@@ -398,8 +357,8 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                // startTimer(30, timeBar);
                 startTimer(remainingTimeSeconds, timeBar);
-                SharedPreferences sharedPreferences = getSharedPreferences("QuizState", MODE_PRIVATE);
-                int savedQuestionIndex = sharedPreferences.getInt("currentQuestionIndex", 1);
+
+                int savedQuestionIndex = PreferencesUtils.getCurrentQuestionIndex(this);;
 
 
                 if (currentQuestionIndex != savedQuestionIndex) {
@@ -411,34 +370,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
-
-
-
     private void loadQuestion(int index) {
 
         if (questionTimer != null) {
             questionTimer.cancel();
         }
 
-
-
-
-       // timeBar.setProgress(100);
-
-        quizNo.setText(" "+String.valueOf(index));
-        score.setText(" "+String.valueOf(currentScore));
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-
-        QuizApiService apiService = retrofit.create(QuizApiService.class);
-        Call<QuizResponse> call = apiService.getQuizQuestions();
-        call.enqueue(new Callback<QuizResponse>() {
+        quizNo.setText(" "+ index);
+        score.setText(" "+ currentScore);
+        quizApiController.getQuizQuestions(new Callback<QuizResponse>() {
             @Override
             public void onResponse(@NonNull Call<QuizResponse> call, @NonNull Response<QuizResponse> response) {
                 if (response.isSuccessful()) {
@@ -451,12 +391,14 @@ public class MainActivity extends AppCompatActivity {
                                 .error(R.drawable.error_image)
                                 .transform(new RoundedCornersTransformation(25, 0))
                                 .fit()
-//                                .centerInside()
                                 .into(questionImage);
 
                         solution = quizResponse.getSolution();
-
                         enableButtons();
+                        remainingTimeSeconds = 30;
+                        currentProgress = 100;
+                        startTimer( remainingTimeSeconds,timeBar);
+                        remainingTime.setText(R.string.remaining_time_30_seconds);
 
                         switch (solution) {
                             case 0:
@@ -491,10 +433,7 @@ public class MainActivity extends AppCompatActivity {
                                 break;
                         }
 
-                        remainingTimeSeconds = 30;
 
-                        startTimer( remainingTimeSeconds,timeBar);
-                        remainingTime.setText(R.string.remaining_time_30_seconds);
                     }
                 } else {
                     Toast.makeText(getApplicationContext(), "Error loading data....", Toast.LENGTH_SHORT).show();
@@ -549,15 +488,8 @@ public class MainActivity extends AppCompatActivity {
 
 
                int elapsedTime = totalDuration - (int) millisUntilFinished;
-                int progress;
 
-                    progress = (int) ( (currentProgress - ((float) elapsedTime / totalDuration * currentProgress)));
-                    //tstate = false;
-
-                   // progress = (int) (100 - ((float) elapsedTime / totalDuration * 100));
-
-
-
+                int progress = (int) ((currentProgress - ((float) elapsedTime / totalDuration * currentProgress)));
 
                 Log.e("progress value","progress:"+progress);
                 System.out.println("progress value is:"+progress);
@@ -636,7 +568,6 @@ public class MainActivity extends AppCompatActivity {
             tstate = true;
             currentProgress = timeBar.getProgress();
             startTimer(remainingTimeSeconds, timeBar);
-
 
         }
     }

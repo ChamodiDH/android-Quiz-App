@@ -1,4 +1,4 @@
-package com.cdh.quizzgame.Activity;
+package com.cdh.quizzgame.View;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
