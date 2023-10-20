@@ -68,7 +68,7 @@ public class ReportActivity extends AppCompatActivity {
                 if (task.isSuccessful()) {
                     String name = task.getResult().getValue(String.class);
                     userName.setText(name.toString());
-                    loadLatestAttemptData(uid);
+                    loadAllAttemptsData(uid);
 
 
                 } else {
@@ -80,27 +80,65 @@ public class ReportActivity extends AppCompatActivity {
 
     }
 
-    private void loadLatestAttemptData(String uid) {
-        DatabaseReference attemptRef = FirebaseDatabase.getInstance().getReference("users/" + uid + "/attempt");
+//    private void loadLatestAttemptData(String uid) {
+//        DatabaseReference attemptRef = FirebaseDatabase.getInstance().getReference("users/" + uid + "/attempt");
+//
+//        attemptRef.limitToLast(1).addValueEventListener(new ValueEventListener() {
+//            @SuppressLint("SetTextI18n")
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                if (dataSnapshot.exists()) {
+//                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+//                        ReportEntry latestReport = snapshot.getValue(ReportEntry.class);
+//                        if (latestReport != null) {
+//
+//                            details.setText(String.format("Total Questions Answered: %s\nCorrect Answers: %s\nIncorrect Answers: %s", latestReport.getTotalQuestionsAnswered(), latestReport.getCorrectQuestions(), latestReport.getIncorrectQuestions()));
+//                        }
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//
+//            }
+//        });
+//    }
 
-        attemptRef.limitToLast(1).addValueEventListener(new ValueEventListener() {
+    private void loadAllAttemptsData(String uid) {
+        DatabaseReference attemptsRef = FirebaseDatabase.getInstance().getReference("users/" + uid + "/attempt");
+
+        attemptsRef.addValueEventListener(new ValueEventListener() {
             @SuppressLint("SetTextI18n")
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                int totalQuestionsAnswered = 0;
+                int totalCorrectAnswers = 0;
+                int totalIncorrectAnswers = 0;
+
                 if (dataSnapshot.exists()) {
                     for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                        ReportEntry latestReport = snapshot.getValue(ReportEntry.class);
-                        if (latestReport != null) {
+                        ReportEntry report = snapshot.getValue(ReportEntry.class);
+                        if (report != null) {
+                            // Convert string values to integers
+                            int totalQuestions = Integer.parseInt(report.getTotalQuestionsAnswered());
+                            int correctQuestions = Integer.parseInt(report.getCorrectQuestions());
+                            int incorrectQuestions = Integer.parseInt(report.getIncorrectQuestions());
 
-                            details.setText(String.format("Total Questions Answered: %s\nCorrect Answers: %s\nIncorrect Answers: %s", latestReport.getTotalQuestionsAnswered(), latestReport.getCorrectQuestions(), latestReport.getIncorrectQuestions()));
+                            // Accumulate the values
+                            totalQuestionsAnswered += totalQuestions;
+                            totalCorrectAnswers += correctQuestions;
+                            totalIncorrectAnswers += incorrectQuestions;
                         }
                     }
+
+                    details.setText(String.format("Total Questions Answered: %s\nCorrect Answers: %s\nIncorrect Answers: %s", totalQuestionsAnswered, totalCorrectAnswers, totalIncorrectAnswers));
                 }
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                // Handle database error if needed.
             }
         });
     }
