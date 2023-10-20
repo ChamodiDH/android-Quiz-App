@@ -120,12 +120,12 @@ public class ReportActivity extends AppCompatActivity {
                     for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                         ReportEntry report = snapshot.getValue(ReportEntry.class);
                         if (report != null) {
-                            // Convert string values to integers
+
                             int totalQuestions = Integer.parseInt(report.getTotalQuestionsAnswered());
                             int correctQuestions = Integer.parseInt(report.getCorrectQuestions());
                             int incorrectQuestions = Integer.parseInt(report.getIncorrectQuestions());
 
-                            // Accumulate the values
+                           
                             totalQuestionsAnswered += totalQuestions;
                             totalCorrectAnswers += correctQuestions;
                             totalIncorrectAnswers += incorrectQuestions;
@@ -138,7 +138,7 @@ public class ReportActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                // Handle database error if needed.
+
             }
         });
     }
